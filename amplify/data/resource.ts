@@ -5,87 +5,59 @@ const schema = a
   .schema({
     UserProfile: a
       .model({
-        email: a.string(),
-        profileOwner: a.string(),
-        children: a.hasMany('Child'),
-        rewardsPunishmentsGifts: a.hasMany('RewardPunishmentGift'),
+        email: a.string().required(),
+        profileOwner: a.string().required(),
+        children: a.hasMany('Child', 'caretakers'),
+        rewardsPunishmentsGifts: a.hasMany('RewardPunishmentGift', 'userProfile'),
       })
-      .authorization((allow) => [
-        allow.ownerDefinedIn("profileOwner"),
-      ]),
+      .authorization((allow) => [allow.owner()]),
 
     Child: a
       .model({
-        name: a.string(),
-        caretakers: a.manyToMany('UserProfile', 'ChildCaretaker'),
-        rules: a.hasMany('Rule'),
-        timetableItems: a.hasMany('TimetableItem'),
-        pointLogs: a.hasMany('PointLog'),
+        name: a.string().required(),
+        caretakers: a.hasMany('UserProfile', 'children'),
+        rules: a.hasMany('Rule', 'child'),
+        timetableItems: a.hasMany('TimetableItem', 'child'),
+        pointLogs: a.hasMany('PointLog', 'child'),
       })
-      .authorization((allow) => [
-        allow.owner(),
-        allow.private(),
-      ]),
-
-    ChildCaretaker: a
-      .model({
-        child: a.belongsTo('Child'),
-        caretaker: a.belongsTo('UserProfile'),
-        relationship: a.string(), // e.g., "parent", "grandparent", "uncle"
-      })
-      .authorization((allow) => [
-        allow.owner(),
-        allow.private(),
-      ]),
+      .authorization((allow) => [allow.owner(), allow.private().to(['read'])]),
 
     Rule: a
       .model({
-        child: a.belongsTo('Child'),
-        text: a.string(),
-        order: a.integer(),
+        child: a.belongsTo('Child', 'rules'),
+        text: a.string().required(),
+        order: a.integer().required(),
       })
-      .authorization((allow) => [
-        allow.owner(),
-        allow.private(),
-      ]),
+      .authorization((allow) => [allow.owner(), allow.private().to(['read'])]),
 
     TimetableItem: a
       .model({
-        child: a.belongsTo('Child'),
-        timeslot: a.string(),
-        order: a.integer(),
-        agendaItem: a.string(),
+        child: a.belongsTo('Child', 'timetableItems'),
+        timeslot: a.string().required(),
+        order: a.integer().required(),
+        agendaItem: a.string().required(),
       })
-      .authorization((allow) => [
-        allow.owner(),
-        allow.private(),
-      ]),
+      .authorization((allow) => [allow.owner(), allow.private().to(['read'])]),
 
     PointLog: a
       .model({
-        child: a.belongsTo('Child'),
-        date: a.date(),
-        time: a.time(),
-        points: a.integer(),
-        action: a.string(),
+        child: a.belongsTo('Child', 'pointLogs'),
+        date: a.date().required(),
+        time: a.time().required(),
+        points: a.integer().required(),
+        action: a.string().required(),
       })
-      .authorization((allow) => [
-        allow.owner(),
-        allow.private(),
-      ]),
+      .authorization((allow) => [allow.owner(), allow.private().to(['read'])]),
 
     RewardPunishmentGift: a
       .model({
-        userProfile: a.belongsTo('UserProfile'),
-        category: a.string(), // "reward", "punishment", or "gift"
-        points: a.integer(),
-        description: a.string(),
-        imageLink: a.string(),
+        userProfile: a.belongsTo('UserProfile', 'rewardsPunishmentsGifts'),
+        category: a.string().required(),
+        points: a.integer().required(),
+        description: a.string().required(),
+        imageLink: a.string().required(),
       })
-      .authorization((allow) => [
-        allow.owner(),
-        allow.private(),
-      ]),
+      .authorization((allow) => [allow.owner(), allow.private().to(['read'])]),
   })
   .authorization((allow) => [allow.resource(postConfirmation)]);
 
